@@ -1,0 +1,33 @@
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    // Mengambil ID file dari URL
+    const fileId = url.searchParams.get('id') || '33u48ez7xbbp4iy';
+
+    const mediafireUrl = `https://www.mediafire.com/file/${fileId}/file`;
+
+    try {
+      // 1. Ambil halaman HTML MediaFire dengan menyamar sebagai browser biasa
+      const response = await fetch(mediafireUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      });
+      const html = await response.text();
+
+      // 2. Cari direct link download di dalam HTML (biasanya berawalan https://download...)
+      const match = html.match(/href="(https:\/\/download[^"]+)"/);
+
+      if (match && match[1]) {
+        // 3. Jika ketemu, langsung arahkan (redirect) ke link unduhan aslinya
+        return Response.redirect(match[1], 302);
+      } else {
+        // Jika gagal, kembalikan ke halaman MediaFire biasa
+        return Response.redirect(mediafireUrl, 302);
+      }
+    } catch (error) {
+      // Jika terjadi error sistem, kembalikan ke halaman MediaFire
+      return Response.redirect(mediafireUrl, 302);
+    }
+  }
+};
