@@ -10,21 +10,18 @@ export default {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
       });
+      
       const html = await response.text();
 
-      // Regex lebih spesifik: mencari tag <a> dengan class "popsok"
-      // dan mengambil nilai href-nya. Tanda kutip bisa tunggal atau ganda.
-      const match = html.match(/<a[^>]+class="[^"]*popsok[^"]*"[^>]+href="([^"]+)"/);
+      // REGEX BARU: Mencari link yang mengandung "download" dan "mediafire.com"
+      // Ini jauh lebih stabil dan tidak terpengaruh perubahan tag HTML
+      const match = html.match(/href="(https:\/\/download[^"]+mediafire\.com[^"]+)"/i);
       
-      // Jika tidak ketemu dengan class "popsok", coba pola alternatif
-      const fallbackMatch = html.match(/href="(https:\/\/download[^"]+\.mediafire\.com[^"]+)"/);
-
-      const directLink = match ? match[1] : (fallbackMatch ? fallbackMatch[1] : null);
-
-      if (directLink) {
-        return Response.redirect(directLink, 302);
+      if (match && match[1]) {
+        // Jika link ditemukan, langsung redirect ke file APK
+        return Response.redirect(match[1], 302);
       } else {
-        // Jika tetap gagal, kembalikan ke halaman MediaFire biasa
+        // Jika gagal, arahkan ke halaman MediaFire biasa
         return Response.redirect(mediafireUrl, 302);
       }
     } catch (error) {
